@@ -35,7 +35,6 @@ class word_embedding(nn.Module):
 class RNN_model(nn.Module):
     def __init__(self, batch_sz ,vocab_len ,word_embedding,embedding_dim, lstm_hidden_dim):
         super(RNN_model,self).__init__()
-
         self.word_embedding_lookup = word_embedding
         self.batch_size = batch_sz
         self.vocab_length = vocab_len
@@ -45,9 +44,13 @@ class RNN_model(nn.Module):
         # here you need to define the "self.rnn_lstm"  the input size is "embedding_dim" and the output size is "lstm_hidden_dim"
         # the lstm should have two layers, and the  input and output tensors are provided as (batch, seq, feature)
         # ???
-
-
-
+        self.rnn_lstm = nn.LSTM(
+            input_size=embedding_dim,
+            hidden_size=lstm_hidden_dim,
+            num_layers=2,
+            batch_first=True,
+            dropout=0.2 if 2 > 1 else 0
+        )
         ##########################################
         self.fc = nn.Linear(lstm_hidden_dim, vocab_len )
         self.apply(weights_init) # call the weights initial function.
@@ -61,9 +64,11 @@ class RNN_model(nn.Module):
         # here you need to put the "batch_input"  input the self.lstm which is defined before.
         # the hidden output should be named as output, the initial hidden state and cell state set to zero.
         # ???
+        h0 = torch.zeros(2, batch_input.size(0), self.lstm_dim).to(batch_input.device)
+        c0 = torch.zeros(2, batch_input.size(0), self.lstm_dim).to(batch_input.device)
 
-
-
+        # Forward pass through LSTM
+        output, (hn, cn) = self.rnn_lstm(batch_input, (h0, c0))
 
         ################################################
         out = output.contiguous().view(-1,self.lstm_dim)
